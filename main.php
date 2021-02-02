@@ -1,4 +1,6 @@
 <?php
+//disable display notice
+error_reporting(E_ALL & ~E_NOTICE);
 
 // songs
 $imagine = ['c', 'cmaj7', 'f', 'am', 'dm', 'g', 'e7'];
