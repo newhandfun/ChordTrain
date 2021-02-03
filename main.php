@@ -1,23 +1,12 @@
 <?php
 //disable display notice
-
 error_reporting(E_ALL & ~E_NOTICE);
+
+//引入邏輯類別
 require('./Entities/Main.php');
-
 use Entities\Main;
-use Entities\Main\Song;
 
-// songs
-$imagine = ['c', 'cmaj7', 'f', 'am', 'dm', 'g', 'e7'];
-$somewhere_over_the_rainbow = ['c', 'em', 'f', 'g', 'am'];
-$tooManyCooks = ['c', 'g', 'f'];
-$iWillFollowYouIntoTheDark = ['f', 'dm', 'bb', 'c', 'a', 'bbm'];
-$babyOneMoreTime = ['cm', 'g', 'bb', 'eb', 'fm', 'ab'];
-$creep = ['g', 'gsus4', 'b', 'bsus4', 'c', 'cmsus4', 'cm6'];
-$army = ['ab', 'ebm7', 'dbadd9', 'fm7', 'bbm', 'abmaj7', 'ebm'];
-$paperBag = ['bm7', 'e', 'c', 'g', 'b7', 'f', 'em', 'a', 'cmaj7', 'em7', 'a7', 'f7', 'b'];
-$toxic = ['cm', 'eb', 'g', 'cdim', 'eb7', 'd7', 'db7', 'ab', 'gmaj7', 'g7'];
-$bulletproof = ['d#m', 'g#', 'b', 'f#', 'g#m', 'c#'];
+//全域變數 (output)
 $song_11 = [];
 $songs = [];
 $labels = [];
@@ -47,17 +36,13 @@ function train($chords, $label)
     $main = getLegacyMainInstance();
     $main->addSong($chords,$label);
     global $songs;
-    $songs = array_map(function(Song $song){
-        return $song->toArray();
-    },$main->getSongs());
+    $songs = $main->getSongArrays();
     global $labelCounts;
     $labelCounts = $main->getLabelToCountTable();
     global $allChords;
     $allChords = $main->getAllUniqueChords();
     global $label;
-    $label = array_map(function(Song $song){
-        return $song->getLabel();
-    },$main->getSongs());
+    $label = $main->getAllLabels();
 }
 
 /**
@@ -94,6 +79,21 @@ function setProbabilityOfChordsInLabels()
     global $probabilityOfChordsInLabels;
     $probabilityOfChordsInLabels = getLegacyMainInstance()->getChordsInLabelProbability();
 }
+
+/**
+ * 執行程式
+ */
+
+$imagine = ['c', 'cmaj7', 'f', 'am', 'dm', 'g', 'e7'];
+$somewhere_over_the_rainbow = ['c', 'em', 'f', 'g', 'am'];
+$tooManyCooks = ['c', 'g', 'f'];
+$iWillFollowYouIntoTheDark = ['f', 'dm', 'bb', 'c', 'a', 'bbm'];
+$babyOneMoreTime = ['cm', 'g', 'bb', 'eb', 'fm', 'ab'];
+$creep = ['g', 'gsus4', 'b', 'bsus4', 'c', 'cmsus4', 'cm6'];
+$army = ['ab', 'ebm7', 'dbadd9', 'fm7', 'bbm', 'abmaj7', 'ebm'];
+$paperBag = ['bm7', 'e', 'c', 'g', 'b7', 'f', 'em', 'a', 'cmaj7', 'em7', 'a7', 'f7', 'b'];
+$toxic = ['cm', 'eb', 'g', 'cdim', 'eb7', 'd7', 'db7', 'ab', 'gmaj7', 'g7'];
+$bulletproof = ['d#m', 'g#', 'b', 'f#', 'g#m', 'c#'];
 
 train($imagine, 'easy');
 train($somewhere_over_the_rainbow, 'easy');

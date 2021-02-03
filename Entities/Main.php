@@ -36,6 +36,9 @@ class Main{
         return $this;
     }
 
+    /**
+     * 取得所有歌
+     */
     public function getSongs():array{
         return $this->songs;
     }
@@ -54,7 +57,19 @@ class Main{
     public function getSongsCount(){
         return count($this->songs);
     }
+
+    /**
+     * 取得轉好array的歌曲列表
+     */
+    public function getSongArrays():array{
+        return array_map(function(Song $song){
+            return $song->toArray();
+        },$this->songs);
+    }
     
+    /**
+     * 取得目前歌曲中各label出現的數目
+     */
     function getLabelToCountTable():array{
         $labelCounts = [];
         foreach($this->songs as $song){
@@ -65,7 +80,10 @@ class Main{
         return $labelCounts;
     }
 
-    function getLabelInSongsProbabilities(){
+    /**
+     * 取得label出現在目前歌曲的機率
+     */
+    function getLabelInSongsProbabilities():array{
         return array_map(function($labelCount){
             return $labelCount / $this->getSongsCount();
         },$this->getLabelToCountTable());
@@ -75,13 +93,17 @@ class Main{
      * 回傳所有種類的label
      * @return string[]
      */
-    function getAllUniqueLabels(){
-        return 
-        array_unique(
-            array_map(function(Song $song){
-                return $song->getLabel;
-            },$this->songs)
-        );
+    function getAllUniqueLabels():array{
+        return array_unique($this->getAllLabels());
+    }
+
+    /**
+     * 取得所有歌的label
+     */
+    function getAllLabels():array{
+        return array_map(function(Song $song){
+            return $song->getLabel();
+        },$this->songs);
     }
 
     /**
