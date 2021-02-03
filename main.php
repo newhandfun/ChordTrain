@@ -1,6 +1,11 @@
 <?php
 //disable display notice
+
 error_reporting(E_ALL & ~E_NOTICE);
+require('./Entities/Main.php');
+
+use Entities\Main;
+use Entities\Main\Song;
 
 // songs
 $imagine = ['c', 'cmaj7', 'f', 'am', 'dm', 'g', 'e7'];
@@ -22,66 +27,72 @@ $labelProbabilities = [];
 $chordCountsInLabels = [];
 $probabilityOfChordsInLabels = [];
 
-function train($chords, $label)
-{
-    updateLegacyVariablesWhenTrain($chords,$label);
-    global $songs;
-    $songs[] = [$label, $chords];
-    global $labelCounts;
-    $labelCount = $labelCounts[$label] ?? 0;
-    $labelCounts[$label] = $labelCount + 1;
+/**
+ * 為了讓全域函式可以正常運行，用function實做singleton
+ * 讓client使用全域函式結果與原先一致。
+ */
+function getLegacyMainInstance() : Main{
+    static $main = null;
+    if(!$main){
+        $main = new Main();
+    }
+    return $main;
 }
 
 /**
- * update variables which are updated when train in legacy code.
+ * 新增歌曲
  */
-function updateLegacyVariablesWhenTrain($chords, $label){
+function train($chords, $label)
+{
+    $main = getLegacyMainInstance();
+    $main->addSong($chords,$label);
+    global $songs;
+    $songs = array_map(function(Song $song){
+        return $song->toArray();
+    },$main->getSongs());
+    global $labelCounts;
+    $labelCounts = $main->getLabelToCountTable();
     global $allChords;
-    $GLOBALS['label'][] = $label;
-    foreach($chords as $chord){
-        if(empty($allChords) || !in_array($chord,$allChords))
-            $allChords[]  = $chord;
-    }
+    $allChords = $main->getAllUniqueChords();
+    global $label;
+    $label = array_map(function(Song $song){
+        return $song->getLabel();
+    },$main->getSongs());
 }
 
+/**
+ * 歌曲數目
+ */
 function getNumberOfSongs()
 {
-    return count($GLOBALS['songs']);
+    return getLegacyMainInstance()->getSongsCount();
 }
 
+/**
+ * 計算每個label的機率
+ */
 function setLabelProbabilities()
 {
-    $numberOfSongs = getNumberOfSongs();
-    global $labelProbabilities,$labelCounts;
-    foreach (array_keys($labelCounts) as $label) {
-        $labelProbabilities[$label] = $labelCounts[$label] / $numberOfSongs;
-    }
+    global $labelProbabilities;
+    $labelProbabilities = getLegacyMainInstance()->getLabelInSongsProbabilities();
 }
 
+/**
+ * 計算每個label的歌曲中有多少chord
+ */
 function setChordCountsInLabels()
 {
     global $chordCountsInLabels;
-    foreach ($GLOBALS['songs'] as $song) {
-        [$label,$chords] = $song;
-        $chordCounters = $chordCountsInLabels[$label] ?? [];
-        foreach ($chords as $chord) {
-            $beforeCount = $chordCounters[$chord] ?? 0;
-            $chordCounters[$chord] = $beforeCount + 1;
-        }
-        $chordCountsInLabels[$label] = $chordCounters;
-    }
+    $chordCountsInLabels = getLegacyMainInstance()->getLabelToChordsCountTable();
 }
 
+/**
+ * 計算各label當中每個chord在所有歌曲中出現的機率
+ */
 function setProbabilityOfChordsInLabels()
 {
-    global $probabilityOfChordsInLabels,$chordCountsInLabels;
-    $probabilityOfChordsInLabels = $chordCountsInLabels;
-
-    foreach($probabilityOfChordsInLabels as $label=>&$chords){
-        foreach($chords as &$chord){
-            $chord *= 1/getNumberOfSongs();
-        }
-    }
+    global $probabilityOfChordsInLabels;
+    $probabilityOfChordsInLabels = getLegacyMainInstance()->getChordsInLabelProbability();
 }
 
 train($imagine, 'easy');
@@ -98,21 +109,11 @@ setLabelProbabilities();
 setChordCountsInLabels();
 setProbabilityOfChordsInLabels();
 
-const CLASSIFY_PROBABILITIES = 1.01;
+const CLASSIFY_PROBABILITIES = Main::CLASSIFY_PROBABILITIES;
 function classify($chords){
     global $labelProbabilities,$probabilityOfChordsInLabels;
     print_r($labelProbabilities);
-    $classified = [];
-    foreach ($labelProbabilities as $label=>$probabilities) {
-        $labelClassifyProbabilities = $probabilities + CLASSIFY_PROBABILITIES;
-        foreach ($chords as $chord) {
-            $probabilityOfChordInLabel = $probabilityOfChordsInLabels[$label][$chord] ?? false;
-            if ($probabilityOfChordInLabel) {
-                $labelClassifyProbabilities *= ($probabilityOfChordInLabel + CLASSIFY_PROBABILITIES);
-            }
-            $classified[$label] = $labelClassifyProbabilities;
-        }
-    }
+    $classified = getLegacyMainInstance()->classify($chords,$probabilityOfChordsInLabels);
     print_r($classified);
 }
 
