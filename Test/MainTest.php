@@ -2,7 +2,6 @@
 error_reporting(E_ALL & ~E_WARNING);
 use PHPUnit\Framework\TestCase;
 
-require('main.php');
 
 final class MainTest extends TestCase
 {    
@@ -17,28 +16,12 @@ final class MainTest extends TestCase
     protected $bulletproof = ['d#m', 'g#', 'b', 'f#', 'g#m', 'c#'];
 
     protected function execute(){
-        train($this->imagine, 'easy');
-        train($this->somewhere_over_the_rainbow, 'easy');
-        train($this->tooManyCooks, 'easy');
-        train($this->iWillFollowYouIntoTheDark, 'medium');
-        train($this->babyOneMoreTime, 'medium');
-        train($this->creep, 'medium');
-        train($this->paperBag, 'hard');
-        train($this->toxic, 'hard');
-        train($this->bulletproof, 'hard');
-        
-        setLabelProbabilities();
-        setChordCountsInLabels();
-        setProbabilityOfChordsInLabels();
-
-        classify(['d', 'g', 'e', 'dm']);
-        classify(['f#m7', 'a', 'dadd9', 'dmaj7', 'bm', 'bm7', 'd', 'f#m']);
+        require('main_legacy.php');
     }
 
     public function testSongs(){
         $this->execute();
         global $songs;
-        ;
         $this->assertEqualsCanonicalizing([
             ['easy',$this->imagine],
             ['easy',$this->somewhere_over_the_rainbow],
@@ -238,12 +221,12 @@ final class MainTest extends TestCase
     
     public function testSong11(){
         global $song_11;
-        $this->assertEqualsCanonicalizing([],$song_11);
+        $this->assertTrue(empty($song_11));
     }
 
     public function testLabels(){
         global $labels;
-        $this->assertEqualsCanonicalizing([],$labels);
+        $this->assertTrue(empty($labels));
     }
     
     public function testLabel(){
@@ -252,21 +235,12 @@ final class MainTest extends TestCase
             "easy",
             "easy",
             "easy",
-            "easy",
-            "easy",
-            "easy",
+            "medium",
             "medium",
             "medium",
             "hard",
             "hard",
             "hard",
-            "hard",
-            "hard",
-            "hard",
-            "medium",
-            "medium",
-            "medium",
-            "medium",
         ],$label);
     }
 }

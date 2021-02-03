@@ -1,6 +1,4 @@
-<phpunit backupGlobals="false"
-         convertNoticesToExceptions="false"
-         convertWarningsToExceptions="false">
+<phpunit >
     <testsuites>
         <testsuite name="Test">
             <directory>.</directory>
