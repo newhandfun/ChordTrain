@@ -1,7 +1,10 @@
 <?php
 namespace Entities;
 require('Main/Song.php');
+require('Main/Algorithm/LegacyClassify.php');
 
+use Entities\Main\Algorithm\IClassify;
+use Entities\Main\Algorithm\LegacyClassify;
 use Entities\Main\Song;
 
 class Main{
@@ -10,6 +13,19 @@ class Main{
      * @var Song[]
      */
     private $songs = [];
+
+    /**
+     * @var IClassify
+     */
+    private $classifyAlgorithm = null;
+
+    public function __construct(?IClassify $classifyAlgorithm = null)
+    {
+        if(empty($classifyAlgorithm)){
+            $classifyAlgorithm = new LegacyClassify();
+        }
+        $this->classifyAlgorithm = $classifyAlgorithm;
+    }
 
     /**
      * 新增歌曲
@@ -24,6 +40,17 @@ class Main{
         return $this->songs;
     }
 
+    /**
+     * 設定使用的演算法
+     */
+    public function setClassify(IClassify $newAlgorithm):Main{
+        $this->classifyAlgorithm = $newAlgorithm;
+        return $this;
+    }
+
+    /**
+     * 取得歌曲數目
+     */
     public function getSongsCount(){
         return count($this->songs);
     }
@@ -105,28 +132,13 @@ class Main{
     }
 
     /**
-     * 未知演算法常數
-     */
-    const CLASSIFY_PROBABILITIES = 1.01;
-
-    /**
      * 未知的演算法
      */
     function classify(array $chords,?array $probabilityOfChordsInLabels = null){
         if($probabilityOfChordsInLabels == null){
             $probabilityOfChordsInLabels = $this->getChordsInLabelProbability();
         }
-        $classified = [];
-        foreach ($this->getLabelInSongsProbabilities() as $label=>$probabilities) {
-            $labelClassifyProbabilities = $probabilities + CLASSIFY_PROBABILITIES;
-            foreach ($chords as $chord) {
-                $probabilityOfChordInLabel = $probabilityOfChordsInLabels[$label][$chord] ?? false;
-                if ($probabilityOfChordInLabel) {
-                    $labelClassifyProbabilities *= ($probabilityOfChordInLabel + CLASSIFY_PROBABILITIES);
-                }
-                $classified[$label] = $labelClassifyProbabilities;
-            }
-        }
-        return $classified;
+        //執行目前指定的演算法
+        return $this->classifyAlgorithm->execute($chords,$this->getLabelInSongsProbabilities(),$probabilityOfChordsInLabels);
     }
 }

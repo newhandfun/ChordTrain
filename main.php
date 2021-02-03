@@ -109,7 +109,6 @@ setLabelProbabilities();
 setChordCountsInLabels();
 setProbabilityOfChordsInLabels();
 
-const CLASSIFY_PROBABILITIES = Main::CLASSIFY_PROBABILITIES;
 function classify($chords){
     global $labelProbabilities,$probabilityOfChordsInLabels;
     print_r($labelProbabilities);
